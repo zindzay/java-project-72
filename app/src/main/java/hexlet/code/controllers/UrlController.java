@@ -1,11 +1,15 @@
 package hexlet.code.controllers;
 
 import hexlet.code.domain.Url;
+import hexlet.code.domain.UrlCheck;
 import hexlet.code.domain.query.QUrl;
 import io.ebean.PagedList;
 import io.javalin.http.Handler;
 import io.javalin.http.NotFoundResponse;
 import jakarta.annotation.Nullable;
+import kong.unirest.HttpResponse;
+import kong.unirest.Unirest;
+import kong.unirest.UnirestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,8 +81,45 @@ public final class UrlController {
             throw new NotFoundResponse();
         }
 
+        final List<UrlCheck> urlChecks = url.getUrlChecks();
+
         ctx.attribute("url", url);
+        ctx.attribute("urlChecks", urlChecks);
         ctx.render("show.html");
+    };
+
+    public static Handler checkUrl = ctx -> {
+        final Long id = ctx.pathParamAsClass("id", Long.class).getOrDefault(null);
+        final Url url = getUrlById(id);
+
+        LOGGER.info("Url verification started. [url={}]", url.getName());
+
+        try {
+            LOGGER.info("Loading a page for verification. [url={}]", url.getName());
+
+            final HttpResponse<String> response = Unirest
+                    .get(url.getName())
+                    .asString();
+
+            LOGGER.info("Parsing page. [url={}]", url.getName());
+
+            final Integer statusCode = response.getStatus();
+            final var urlCheck = new UrlCheck(statusCode, null, null, null, url);
+
+            urlCheck.save();
+
+            LOGGER.info("Url verification completed. [url={}]", url.getName());
+
+            ctx.sessionAttribute("flash", "Страница успешно проверена");
+            ctx.sessionAttribute("flash-type", "success");
+        } catch (UnirestException e) {
+            LOGGER.info("Url verification error. [url={}]", url.getName());
+
+            ctx.sessionAttribute("flash", "Не удалось проверить страницу");
+            ctx.sessionAttribute("flash-type", "danger");
+        }
+
+        ctx.redirect("/urls/" + id);
     };
 
     private static PagedList<Url> getUrlsByPage(final int page) {

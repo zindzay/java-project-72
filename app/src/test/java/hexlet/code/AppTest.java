@@ -8,13 +8,22 @@ import io.javalin.Javalin;
 import kong.unirest.Empty;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,6 +31,8 @@ class AppTest {
     private static Javalin app;
     private static String baseUrl;
     private static Database database;
+    private static MockWebServer mockWebServer;
+    private static final String TEMPLATES_DIRECTORY = "src/test/resources/mock-templates";
 
     @BeforeAll
     public static void beforeAll() {
@@ -41,6 +52,12 @@ class AppTest {
     void beforeEach() {
         database.script().run("/truncate.sql");
         database.script().run("/seed-test-db.sql");
+        mockWebServer = new MockWebServer();
+    }
+
+    @AfterEach
+    void afterEach() throws IOException {
+        mockWebServer.shutdown();
     }
 
     @Nested
@@ -86,7 +103,45 @@ class AppTest {
                     .contains("ID")
                     .contains("Имя")
                     .contains("Дата создания")
-                    .contains("01/01/2022 13:57");
+                    .contains("01/01/2022 13:57")
+                    .contains("ID")
+                    .contains("Код ответа")
+                    .contains("title")
+                    .contains("h1")
+                    .contains("Дата проверки");
+        }
+
+        @Test
+        void testCheck() throws IOException {
+            final String mockPage = Files.readString(Paths.get(TEMPLATES_DIRECTORY, "index.html"));
+            final String mockPageUrl = mockWebServer.url("/").toString();
+            mockWebServer.enqueue(new MockResponse().setBody(mockPage));
+
+            final var url = new Url(mockPageUrl);
+            url.save();
+
+            final HttpResponse<String> responsePost = Unirest
+                    .post(baseUrl + "/urls/" + url.getId() + "/checks")
+                    .asString();
+
+            assertThat(responsePost.getStatus()).isEqualTo(302);
+            assertThat(responsePost.getHeaders().getFirst("Location")).isEqualTo("/urls/" + url.getId());
+
+            final HttpResponse<String> response = Unirest
+                    .get(baseUrl + "/urls/" + url.getId())
+                    .asString();
+            final String body = response.getBody();
+
+            assertThat(response.getStatus()).isEqualTo(200);
+            assertThat(body)
+                    .contains("ID")
+                    .contains("Код ответа")
+                    .contains("title")
+                    .contains("h1")
+                    .contains("Дата проверки")
+                    .contains(Objects.toString(url.getId()))
+                    .contains("200")
+                    .contains(new SimpleDateFormat("dd/MM/yyyy").format(new Date()));
         }
 
         @Test
