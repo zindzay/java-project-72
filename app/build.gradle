@@ -1,0 +1,55 @@
+plugins {
+    id 'application'
+    id 'checkstyle'
+    id 'jacoco'
+    id "com.adarshr.test-logger" version "3.2.0"
+    id 'se.patrikerdes.use-latest-versions' version '0.2.18'
+    id 'com.github.ben-manes.versions' version '0.46.0'
+    id 'net.ltgt.errorprone' version '3.0.1'
+}
+
+group 'hexlet.code'
+version '1.0-SNAPSHOT'
+
+application {
+    mainClass = 'hexlet.code.App'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation(
+            'org.junit.jupiter:junit-jupiter-api:5.9.2',
+            'org.junit.jupiter:junit-jupiter-params:5.9.2',
+            'org.assertj:assertj-core:3.24.2',
+            'org.slf4j:slf4j-log4j12:2.0.7'
+    )
+
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+
+    errorprone 'com.google.errorprone:error_prone_core:2.18.0'
+}
+
+compileJava {
+    options.release.set(17)
+}
+
+test {
+    useJUnitPlatform()
+}
+
+testlogger {
+    showStandardStreams true
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+    }
+}
+
+checkstyle {
+    toolVersion '9.2.1'
+}
