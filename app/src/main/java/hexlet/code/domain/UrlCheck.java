@@ -8,21 +8,17 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 import java.time.Instant;
 
 @Entity
-@Table(name = "url_checks")
 public final class UrlCheck extends Model {
     @Id
     private long id;
 
     private Integer statusCode;
 
-    @Lob
     private String title;
 
-    @Lob
     private String h1;
 
     @Lob

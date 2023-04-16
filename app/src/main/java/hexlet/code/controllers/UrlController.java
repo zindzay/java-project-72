@@ -3,6 +3,7 @@ package hexlet.code.controllers;
 import hexlet.code.domain.Url;
 import hexlet.code.domain.UrlCheck;
 import hexlet.code.domain.query.QUrl;
+import hexlet.code.domain.query.QUrlCheck;
 import io.ebean.PagedList;
 import io.javalin.http.Handler;
 import io.javalin.http.NotFoundResponse;
@@ -10,12 +11,15 @@ import jakarta.annotation.Nullable;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 public final class UrlController {
@@ -25,15 +29,15 @@ public final class UrlController {
         LOGGER.info("Request urls list.");
 
         final int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(1) - 1;
-        final PagedList<Url> pagedUrls = getUrlsByPage(page);
-        final int lastPage = pagedUrls.getTotalPageCount() + 1;
-        final int currentPage = pagedUrls.getPageIndex() + 1;
+        final PagedList<Url> pagedUrlsWithChecks = getUrlsWithChecksByPage(page);
+        final int totalPage = pagedUrlsWithChecks.getTotalPageCount() + 1;
+        final int currentPage = pagedUrlsWithChecks.getPageIndex() + 1;
         final List<Integer> pages = IntStream
-                .range(1, lastPage)
+                .range(1, totalPage)
                 .boxed()
                 .toList();
 
-        ctx.attribute("urls", pagedUrls.getList());
+        ctx.attribute("urls", pagedUrlsWithChecks.getList());
         ctx.attribute("pages", pages);
         ctx.attribute("currentPage", currentPage);
         ctx.render("urls.html");
@@ -41,11 +45,15 @@ public final class UrlController {
 
 
     public static Handler createUrl = ctx -> {
-        final String urlFromParams = ctx.formParam("url");
+        final String urlFromParams = ctx.formParamAsClass("url", String.class).getOrDefault(null);
+
+        LOGGER.info("Request create url. [url={}]", urlFromParams);
+
         final String normalizedUrl = getNormalizedUrl(urlFromParams);
 
         if (normalizedUrl == null) {
             LOGGER.error("Invalid url. [url={}]", urlFromParams);
+
             ctx.sessionAttribute("flash", "Некорректный URL");
             ctx.sessionAttribute("flash-type", "danger");
             ctx.attribute("url", urlFromParams);
@@ -54,14 +62,15 @@ public final class UrlController {
         }
 
         if (getUrlByName(normalizedUrl) != null) {
-            LOGGER.error("Page already exists. [url={}]", normalizedUrl);
+            LOGGER.error("Url already exists. [url={}]", urlFromParams);
+
             ctx.sessionAttribute("flash", "Страница уже существует");
-            ctx.sessionAttribute("flash-type", "danger");
+            ctx.sessionAttribute("flash-type", "info");
             ctx.redirect("/urls");
             return;
         }
 
-        LOGGER.info("Page added successfully. [url={}]", normalizedUrl);
+        LOGGER.info("Url added successfully. [url={}]", urlFromParams);
         Url url = new Url(normalizedUrl);
         url.save();
 
@@ -78,10 +87,13 @@ public final class UrlController {
         final Url url = getUrlById(id);
 
         if (url == null) {
+            LOGGER.error("Request url by id, not found. [id={}]", id);
             throw new NotFoundResponse();
         }
 
         final List<UrlCheck> urlChecks = url.getUrlChecks();
+
+        LOGGER.error("Request url by id, found. [id={}]", id);
 
         ctx.attribute("url", url);
         ctx.attribute("urlChecks", urlChecks);
@@ -92,10 +104,10 @@ public final class UrlController {
         final Long id = ctx.pathParamAsClass("id", Long.class).getOrDefault(null);
         final Url url = getUrlById(id);
 
-        LOGGER.info("Url verification started. [url={}]", url.getName());
+        LOGGER.info("Request url verification. [url={}]", url.getName());
 
         try {
-            LOGGER.info("Loading a page for verification. [url={}]", url.getName());
+            LOGGER.info("Loading page by url for verification. [url={}]", url.getName());
 
             final HttpResponse<String> response = Unirest
                     .get(url.getName())
@@ -104,7 +116,15 @@ public final class UrlController {
             LOGGER.info("Parsing page. [url={}]", url.getName());
 
             final Integer statusCode = response.getStatus();
-            final var urlCheck = new UrlCheck(statusCode, null, null, null, url);
+            final Document body = Jsoup.parse(response.getBody());
+            final String title = body.title();
+            final String h1 = body.selectFirst("h1") != null
+                    ? Objects.requireNonNull(body.selectFirst("h1")).text()
+                    : null;
+            final String description = body.selectFirst("meta[name=description]") != null
+                    ? Objects.requireNonNull(body.selectFirst("meta[name=description]")).attr("content")
+                    : null;
+            final var urlCheck = new UrlCheck(statusCode, title, h1, description, url);
 
             urlCheck.save();
 
@@ -122,12 +142,14 @@ public final class UrlController {
         ctx.redirect("/urls/" + id);
     };
 
-    private static PagedList<Url> getUrlsByPage(final int page) {
+    private static PagedList<Url> getUrlsWithChecksByPage(final int page) {
         final int rowsPerPage = 10;
         return new QUrl()
                 .setFirstRow(page * rowsPerPage)
                 .setMaxRows(rowsPerPage)
                 .orderBy().id.asc()
+                .urlChecks.fetch(QUrlCheck.alias().statusCode, QUrlCheck.alias().createdAt)
+                .orderBy().urlChecks.createdAt.desc()
                 .findPagedList();
     }
 

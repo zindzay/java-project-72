@@ -31,11 +31,11 @@ dependencies {
             'org.thymeleaf.extras:thymeleaf-extras-java8time:3.0.4.RELEASE',
             'org.webjars:bootstrap:5.2.3',
 
-            'io.ebean:ebean:13.15.0',
-            'io.ebean:ebean-querybean:13.15.0',
-            'io.ebean:ebean-annotation:8.3',
-            'io.ebean:ebean-ddl-generator:13.15.0',
-            'io.ebean:ebean-migration:13.7.0',
+            'io.ebean:ebean:12.15.1',
+            'io.ebean:ebean-ddl-generator:12.15.1',
+            'io.ebean:ebean-querybean:12.15.1',
+            'io.ebean:ebean-migration:12.15.1',
+            'io.ebean:ebean-annotation:7.7',
 
             // NOTE: ebean-ddl-generator требует старые зависимости, которых нет в java 9 и выше
             'org.glassfish.jaxb:jaxb-runtime:2.3.5',
@@ -45,16 +45,18 @@ dependencies {
             'org.postgresql:postgresql:42.5.4',
 
             'com.konghq:unirest-java:3.14.2',
+
+            'org.jsoup:jsoup:1.15.4',
     )
 
-    annotationProcessor 'io.ebean:querybean-generator:13.15.0'
+    annotationProcessor 'io.ebean:querybean-generator:12.15.1'
 
     testImplementation(
             'org.junit.jupiter:junit-jupiter-api:5.9.2',
             'org.junit.jupiter:junit-jupiter-params:5.9.2',
             'org.assertj:assertj-core:3.24.2',
             'org.slf4j:slf4j-log4j12:2.0.7',
-            'io.ebean:ebean-test:13.15.0',
+            'io.ebean:ebean-test:12.15.1',
             'com.squareup.okhttp3:mockwebserver:4.10.0'
     )
 

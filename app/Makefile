@@ -27,6 +27,9 @@ lint:
 update-deps:
 	./gradlew useLatestVersions
 
+generate-migrations:
+	./gradlew generateMigrations
+
 build-run: build run
 
 .PHONY: build

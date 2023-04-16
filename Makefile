@@ -27,6 +27,9 @@ update-deps:
 lint:
 	make -C app lint
 
+generate-migrations:
+	make -C app generate-migrations
+
 build-run: build run
 
 .PHONY: build

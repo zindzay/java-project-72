@@ -8,12 +8,10 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import javax.persistence.Table;
 import java.time.Instant;
 import java.util.List;
 
 @Entity
-@Table(name = "urls")
 public final class Url extends Model {
     @Id
     private long id;

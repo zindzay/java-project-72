@@ -36,3 +36,8 @@ make lint
 ```sh
 make update-deps
 ```
+
+## Generate database migrations
+```sh
+make generate-migrations
+```
