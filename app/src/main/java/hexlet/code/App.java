@@ -16,7 +16,7 @@ public class App {
         return getMode().equals("production");
     }
 
-    private static void addRoutes(Javalin app) {
+    private static void addRoutes(final Javalin app) {
         app.get("/", ctx -> ctx.result("Hello World"));
     }
 

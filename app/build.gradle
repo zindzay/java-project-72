@@ -6,6 +6,7 @@ plugins {
     id 'se.patrikerdes.use-latest-versions' version '0.2.18'
     id 'com.github.ben-manes.versions' version '0.46.0'
     id 'net.ltgt.errorprone' version '3.0.1'
+    id('io.ebean') version '13.6.5'
 }
 
 group 'hexlet.code'
@@ -22,14 +23,30 @@ repositories {
 dependencies {
     implementation(
             'io.javalin:javalin:5.4.2',
-            'org.slf4j:slf4j-simple:2.0.5'
+            'org.slf4j:slf4j-simple:2.0.5',
+
+            'io.ebean:ebean:13.15.0',
+            'io.ebean:ebean-querybean:13.15.0',
+            'io.ebean:ebean-annotation:8.3',
+            'io.ebean:ebean-ddl-generator:13.15.0',
+            'io.ebean:ebean-migration:13.7.0',
+
+            // NOTE: ebean-ddl-generator требует старые зависимости, которых нет в java 9 и выше
+            'org.glassfish.jaxb:jaxb-runtime:2.3.5',
+            'javax.activation:activation:1.1.1',
+
+            'com.h2database:h2:2.1.214',
+            'org.postgresql:postgresql:42.5.4',
     )
+
+    annotationProcessor 'io.ebean:querybean-generator:13.15.0'
 
     testImplementation(
             'org.junit.jupiter:junit-jupiter-api:5.9.2',
             'org.junit.jupiter:junit-jupiter-params:5.9.2',
             'org.assertj:assertj-core:3.24.2',
-            'org.slf4j:slf4j-log4j12:2.0.7'
+            'org.slf4j:slf4j-log4j12:2.0.7',
+            'io.ebean:ebean-test:13.15.0',
     )
 
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
@@ -39,6 +56,7 @@ dependencies {
 
 compileJava {
     options.release.set(17)
+    options.encoding = 'UTF-8'
 }
 
 test {
@@ -61,3 +79,8 @@ checkstyle {
 
 task stage(dependsOn: ['clean', 'installDist'])
 installDist.mustRunAfter clean
+
+task generateMigrations(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set('hexlet.code.MigrationGenerator')
+}
