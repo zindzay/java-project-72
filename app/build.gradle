@@ -23,7 +23,13 @@ repositories {
 dependencies {
     implementation(
             'io.javalin:javalin:5.4.2',
+            'io.javalin:javalin-rendering:5.4.2',
             'org.slf4j:slf4j-simple:2.0.5',
+
+            'org.thymeleaf:thymeleaf:3.1.1.RELEASE',
+            'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.2.0',
+            'org.thymeleaf.extras:thymeleaf-extras-java8time:3.0.4.RELEASE',
+            'org.webjars:bootstrap:5.2.3',
 
             'io.ebean:ebean:13.15.0',
             'io.ebean:ebean-querybean:13.15.0',
@@ -47,6 +53,7 @@ dependencies {
             'org.assertj:assertj-core:3.24.2',
             'org.slf4j:slf4j-log4j12:2.0.7',
             'io.ebean:ebean-test:13.15.0',
+            'com.konghq:unirest-java:3.14.2',
     )
 
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'

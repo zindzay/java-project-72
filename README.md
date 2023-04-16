@@ -4,7 +4,7 @@
 [![Test Coverage](https://api.codeclimate.com/v1/badges/af13c8aae5f88759a006/test_coverage)](https://codeclimate.com/github/zindzay/java-project-72/test_coverage)
 
 
-Демонстрационный проект: https://java-project-72-production-d4b1.up.railway.app/
+<a href="https://java-project-72-production-d4b1.up.railway.app/" target="_blank">Демонстрационный проект</a>
 
 ## Start
 

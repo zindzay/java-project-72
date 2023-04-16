@@ -19,8 +19,8 @@ public final class Url extends Model {
     @WhenCreated
     private Instant createdAt;
 
-    public Url(final String urlName) {
-        this.name = urlName;
+    public Url(final String name) {
+        this.name = name;
     }
 
     public long getId() {
