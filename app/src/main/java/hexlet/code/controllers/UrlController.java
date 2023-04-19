@@ -24,6 +24,7 @@ import java.util.stream.IntStream;
 
 public final class UrlController {
     private static final Logger LOGGER = LoggerFactory.getLogger(UrlController.class);
+    private static final int ROWS_PER_PAGE = 10;
 
     public static Handler listUrls = ctx -> {
         LOGGER.info("Request urls list.");
@@ -93,7 +94,7 @@ public final class UrlController {
 
         final List<UrlCheck> urlChecks = url.getUrlChecks();
 
-        LOGGER.error("Request url by id, found. [id={}]", id);
+        LOGGER.info("Request url by id, found. [id={}]", id);
 
         ctx.attribute("url", url);
         ctx.attribute("urlChecks", urlChecks);
@@ -133,7 +134,7 @@ public final class UrlController {
             ctx.sessionAttribute("flash", "Страница успешно проверена");
             ctx.sessionAttribute("flash-type", "success");
         } catch (UnirestException e) {
-            LOGGER.info("Url verification error. [url={}]", url.getName());
+            LOGGER.error("Url verification error. [url={}]", url.getName());
 
             ctx.sessionAttribute("flash", "Не удалось проверить страницу");
             ctx.sessionAttribute("flash-type", "danger");
@@ -143,10 +144,9 @@ public final class UrlController {
     };
 
     private static PagedList<Url> getUrlsWithChecksByPage(final int page) {
-        final int rowsPerPage = 10;
         return new QUrl()
-                .setFirstRow(page * rowsPerPage)
-                .setMaxRows(rowsPerPage)
+                .setFirstRow(page * ROWS_PER_PAGE)
+                .setMaxRows(ROWS_PER_PAGE)
                 .orderBy().id.asc()
                 .urlChecks.fetch(QUrlCheck.alias().statusCode, QUrlCheck.alias().createdAt)
                 .orderBy().urlChecks.createdAt.desc()

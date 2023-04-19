@@ -50,22 +50,8 @@ class AppTests {
         app = App.getApp();
         app.start(0);
         baseUrl = "http://localhost:" + app.port();
-
-        String createUrl = String.format(
-                "INSERT INTO url (name, created_at) VALUES ('%s', '2023-04-17 01:15:19.13');",
-                URL
-        );
-        DB.sqlUpdate(createUrl).execute();
         existingUrl = new QUrl().name.equalTo(URL).findOne();
-
-        String createUrlCheck = String.format(
-                "INSERT INTO url_check (url_id, status_code, title, description, h1, created_at)"
-                        + "VALUES (%s, 200, 'en title', 'en description', 'en h1', '2023-04-17 01:15:19.13');",
-                existingUrl.getId()
-        );
-        DB.sqlUpdate(createUrlCheck).execute();
         existingUrlCheck = new QUrlCheck().url.equalTo(existingUrl).findOne();
-
         mockServer = new MockWebServer();
         MockResponse mockedResponse = new MockResponse().setBody(readFixture("index.html"));
         mockServer.enqueue(mockedResponse);
